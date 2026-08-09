@@ -1,15 +1,25 @@
 import React, { useState } from 'react';
 
+import whaleImg from '../assets/whale.png';
+import orcaImg from '../assets/orca.png';
+import seaTurtleImg from '../assets/sea-turtle.png';
+import whaleSharkImg from '../assets/whale_shark.png';
+import seahorseImg from '../assets/horsea.png';
+import stingrayImg from '../assets/eagle_ray.png';
+import mantaRayImg from '../assets/manta.png';
+import dolphinImg from '../assets/dolphin.png';
+import octopusImg from '../assets/octopus.png';
+
 const MARINE_ANIMALS = [
-    { id: 'whale', name: 'לוויתן', src: 'src/assets/whale.png' },
-    { id: 'orca', name: 'אורקה', src: 'src/assets/orca.png' },
-    { id: 'sea-turtle', name: 'צב ים', src: 'src/assets/sea-turtle.png' },
-    { id: 'whale-shark', name: 'כריש לוויתן', src: 'src/assets/whale_shark.png' },
-    { id: 'seahorse', name: 'סוסון ים', src: 'src/assets/horsea.png' },
-    { id: 'stingray', name: 'חתול ים', src: 'src/assets/eagle_ray.png' },
-    { id: 'manta-ray', name: 'מנטה ריי', src: 'src/assets/manta.png' },
-    { id: 'dolphin', name: 'דולפין', src: 'src/assets/dolphin.png' },
-    { id: 'octopus', name: 'תמנון', src: 'src/assets/octopus.png' }
+    { id: 'whale', name: 'לוויתן', src: whaleImg },
+    { id: 'orca', name: 'אורקה', src: orcaImg },
+    { id: 'sea-turtle', name: 'צב ים', src: seaTurtleImg },
+    { id: 'whale-shark', name: 'כריש לוויתן', src: whaleSharkImg },
+    { id: 'seahorse', name: 'סוסון ים', src: seahorseImg },
+    { id: 'stingray', name: 'חתול ים', src: stingrayImg },
+    { id: 'manta-ray', name: 'מנטה ריי', src: mantaRayImg },
+    { id: 'dolphin', name: 'דולפין', src: dolphinImg },
+    { id: 'octopus', name: 'תמנון', src: octopusImg }
 ];
 
 export default function Dives({ seenAnimals, onSave, onRemove }) {

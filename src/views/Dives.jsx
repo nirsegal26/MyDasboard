@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 
-import whaleImg from '../assets/whale.png';
-import orcaImg from '../assets/orca.png';
-import seaTurtleImg from '../assets/sea-turtle.png';
-import whaleSharkImg from '../assets/whale_shark.png';
-import seahorseImg from '../assets/horsea.png';
-import stingrayImg from '../assets/eagle_ray.png';
-import mantaRayImg from '../assets/manta.png';
-import dolphinImg from '../assets/dolphin.png';
-import octopusImg from '../assets/octopus.png';
+import whaleImg from '../assets/whale.webp';
+import orcaImg from '../assets/orca.webp';
+import seaTurtleImg from '../assets/sea-turtle.webp';
+import whaleSharkImg from '../assets/whale_shark.webp';
+import seahorseImg from '../assets/horsea.webp';
+import stingrayImg from '../assets/eagle_ray.webp';
+import mantaRayImg from '../assets/manta.webp';
+import dolphinImg from '../assets/dolphin.webp';
+import octopusImg from '../assets/octopus.webp';
 
 const MARINE_ANIMALS = [
     { id: 'whale', name: 'לוויתן', src: whaleImg },
@@ -57,7 +57,7 @@ export default function Dives({ seenAnimals, onSave, onRemove }) {
             flexDirection: 'column', 
             height: '100%', 
             minHeight: 0,
-            maxWidth: '1200px', /* הגדלנו מ-900 ל-1200 כדי להרחיב את הבלוק */
+            maxWidth: '1200px', 
             margin: '0 auto', 
             width: '100%'
         }}>
@@ -100,6 +100,8 @@ export default function Dives({ seenAnimals, onSave, onRemove }) {
                             <img 
                                 src={animal.src} 
                                 alt={animal.name} 
+                                loading="lazy" 
+                                decoding="async"
                                 style={{
                                     width: '100%',
                                     height: '100%',
@@ -126,6 +128,7 @@ export default function Dives({ seenAnimals, onSave, onRemove }) {
                                 {isSeen && <i className="fa-solid fa-check" style={{ color: 'var(--accent-teal)' }}></i>}
                             </div>
 
+                            {/* חלון פרטים בשיריחןף */}
                             {hoveredAnimal === animal.id && hasDetails && (
                                 <div style={{
                                     position: 'absolute',
@@ -153,6 +156,7 @@ export default function Dives({ seenAnimals, onSave, onRemove }) {
                 })}
             </div>
 
+            {/* Modal תיעוד תצפית */}
             {selectedAnimal && (
                 <div className="modal-overlay" onClick={() => setSelectedAnimal(null)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>

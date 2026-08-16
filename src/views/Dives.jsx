@@ -1,25 +1,16 @@
 import React, { useState } from 'react';
 
-import whaleImg from '../assets/whale.webp';
-import orcaImg from '../assets/orca.webp';
-import seaTurtleImg from '../assets/sea-turtle.webp';
-import whaleSharkImg from '../assets/whale_shark.webp';
-import seahorseImg from '../assets/horsea.webp';
-import stingrayImg from '../assets/eagle_ray.webp';
-import mantaRayImg from '../assets/manta.webp';
-import dolphinImg from '../assets/dolphin.webp';
-import octopusImg from '../assets/octopus.webp';
-
+// קריאה ישירות מתיקיית public/marine לטעינה מקבילית ומהירה ב-Netlify
 const MARINE_ANIMALS = [
-    { id: 'whale', name: 'לוויתן', src: whaleImg },
-    { id: 'orca', name: 'אורקה', src: orcaImg },
-    { id: 'sea-turtle', name: 'צב ים', src: seaTurtleImg },
-    { id: 'whale-shark', name: 'כריש לוויתן', src: whaleSharkImg },
-    { id: 'seahorse', name: 'סוסון ים', src: seahorseImg },
-    { id: 'stingray', name: 'חתול ים', src: stingrayImg },
-    { id: 'manta-ray', name: 'מנטה ריי', src: mantaRayImg },
-    { id: 'dolphin', name: 'דולפין', src: dolphinImg },
-    { id: 'octopus', name: 'תמנון', src: octopusImg }
+    { id: 'whale', name: 'לוויתן', src: '/marine/whale.webp' },
+    { id: 'orca', name: 'אורקה', src: '/marine/orca.webp' },
+    { id: 'sea-turtle', name: 'צב ים', src: '/marine/sea-turtle.webp' },
+    { id: 'whale-shark', name: 'כריש לוויתן', src: '/marine/whale_shark.webp' },
+    { id: 'seahorse', name: 'סוסון ים', src: '/marine/horsea.webp' },
+    { id: 'stingray', name: 'חתול ים', src: '/marine/eagle_ray.webp' },
+    { id: 'manta-ray', name: 'מנטה ריי', src: '/marine/manta.webp' },
+    { id: 'dolphin', name: 'דולפין', src: '/marine/dolphin.webp' },
+    { id: 'octopus', name: 'תמנון', src: '/marine/octopus.webp' }
 ];
 
 export default function Dives({ seenAnimals, onSave, onRemove }) {
@@ -128,7 +119,6 @@ export default function Dives({ seenAnimals, onSave, onRemove }) {
                                 {isSeen && <i className="fa-solid fa-check" style={{ color: 'var(--accent-teal)' }}></i>}
                             </div>
 
-                            {/* חלון פרטים בשיריחןף */}
                             {hoveredAnimal === animal.id && hasDetails && (
                                 <div style={{
                                     position: 'absolute',
@@ -156,7 +146,6 @@ export default function Dives({ seenAnimals, onSave, onRemove }) {
                 })}
             </div>
 
-            {/* Modal תיעוד תצפית */}
             {selectedAnimal && (
                 <div className="modal-overlay" onClick={() => setSelectedAnimal(null)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>

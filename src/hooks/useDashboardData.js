@@ -42,7 +42,14 @@ export function useDashboardData() {
 
     // שמירה אוטומטית ל-LocalStorage בכל פעם ש-state משתנה (מחליף את פונקציית saveState הישנה)
     useEffect(() => {
-        localStorage.setItem('personal_dashboard_data', JSON.stringify(state));
+        localStorage.setItem('your_storage_key', JSON.stringify({
+            tasks: state.tasks,
+            goals: state.goals,
+            habits: state.habits,
+            marineAnimals: state.marineAnimals,
+            customPages: state.customPages,
+            archive: state.archive // <--- הוסף את השורה הזו חובה!
+        }));
     }, [state]);
 
     return [state, setState];

@@ -13,23 +13,46 @@ function App() {
   const [state, setState] = useDashboardData();
   const [currentView, setCurrentView] = useState('dashboard');
   
-  // הוספת ניהול מצב עבור יצירת דף חדש בתוך התפריט
   const [isAddingPage, setIsAddingPage] = useState(false);
   const [newPageTitle, setNewPageTitle] = useState('');
   
   const todayStr = getDateString(new Date());
+
+  // פונקציית גרירה שדואגת לשמור את הסדר החדש במערכת
+  const handleReorder = (collection, newArray, customPageId = null) => {
+    setState(prev => {
+        if (collection === 'custom') {
+            return {
+                ...prev,
+                customPages: (prev.customPages || []).map(p => 
+                    p.id === customPageId ? { ...p, tasks: newArray } : p
+                )
+            };
+        }
+        return { ...prev, [collection]: newArray };
+    });
+  };
 
   const handleToggle = (id, collection, customPageId = null) => {
     setState(prevState => {
       if (collection === 'custom') {
         return {
           ...prevState,
-          customPages: (prevState.customPages || []).map(p => p.id === customPageId ? {
-            ...p, tasks: p.tasks.map(t => t.id === id ? { ...t, completed: !t.completed, completedAt: !t.completed ? todayStr : null } : t)
-          } : p)
+          customPages: (prevState.customPages || []).map(p => {
+              if (p.id === customPageId) {
+                  let updatedTasks = p.tasks.map(t => 
+                      t.id === id ? { ...t, completed: !t.completed, completedAt: !t.completed ? todayStr : null } : t
+                  );
+                  // מיון אוטומטי: פתוחות למעלה, סגורות למטה
+                  updatedTasks = [...updatedTasks.filter(t => !t.completed), ...updatedTasks.filter(t => t.completed)];
+                  return { ...p, tasks: updatedTasks };
+              }
+              return p;
+          })
         };
       }
-      const newArray = prevState[collection].map(item => {
+      
+      let newArray = prevState[collection].map(item => {
         if (item.id === id) {
           if (collection === 'habits') {
             const dates = item.completedDates || [];
@@ -39,16 +62,46 @@ function App() {
         }
         return item;
       });
+
+      // מיון אוטומטי במשימות ובמטרות
+      if (collection === 'tasks' || collection === 'goals') {
+          newArray = [...newArray.filter(item => !item.completed), ...newArray.filter(item => item.completed)];
+      }
+
       return { ...prevState, [collection]: newArray };
     });
   };
 
   const handleDelete = (id, collection, customPageId = null) => {
     setState(prevState => {
+      let itemToDelete = null;
+
       if (collection === 'custom') {
-        return { ...prevState, customPages: prevState.customPages.map(p => p.id === customPageId ? { ...p, tasks: p.tasks.filter(t => t.id !== id) } : p) };
+        const page = prevState.customPages.find(p => p.id === customPageId);
+        if (page) itemToDelete = page.tasks.find(t => t.id === id);
+      } else {
+        itemToDelete = (prevState[collection] || []).find(item => item.id === id);
       }
-      return { ...prevState, [collection]: prevState[collection].filter(item => item.id !== id) };
+
+      // שמירה לארכיון אם המשימה הוגדרה כהושלמה לפני שמחקו אותה
+      let newArchive = prevState.archive || [];
+      if (itemToDelete && itemToDelete.completed) {
+        newArchive = [...newArchive, { ...itemToDelete, archivedFrom: collection }];
+      }
+
+      if (collection === 'custom') {
+        return { 
+          ...prevState, 
+          archive: newArchive,
+          customPages: prevState.customPages.map(p => p.id === customPageId ? { ...p, tasks: p.tasks.filter(t => t.id !== id) } : p) 
+        };
+      }
+      
+      return { 
+        ...prevState, 
+        archive: newArchive,
+        [collection]: prevState[collection].filter(item => item.id !== id) 
+      };
     });
   };
 
@@ -73,20 +126,18 @@ function App() {
   const handleSaveMarineAnimal = (animalData) => {
       setState(prev => {
           const currentAnimals = prev.marineAnimals || [];
-          // מסנן החוצה את הגרסה הקודמת של החיה (אם קיימת) כדי לעדכן במקומה
           const filtered = currentAnimals.filter(a => (typeof a === 'object' ? a.id : a) !== animalData.id);
           return { ...prev, marineAnimals: [...filtered, animalData] };
       });
-    };
+  };
 
-    const handleRemoveMarineAnimal = (animalId) => {
-      setState(prev => {
-          const currentAnimals = prev.marineAnimals || [];
-          return { ...prev, marineAnimals: currentAnimals.filter(a => (typeof a === 'object' ? a.id : a) !== animalId) };
-      });
-    };
+  const handleRemoveMarineAnimal = (animalId) => {
+    setState(prev => {
+        const currentAnimals = prev.marineAnimals || [];
+        return { ...prev, marineAnimals: currentAnimals.filter(a => (typeof a === 'object' ? a.id : a) !== animalId) };
+    });
+  };
 
-  // פונקציה חדשה ששומרת את הדף מהקלט הפנימי
   const handleAddPageSubmit = () => {
     if (newPageTitle.trim()) {
         const newPage = { id: 'page_' + Date.now(), title: newPageTitle.trim(), tasks: [] };
@@ -105,7 +156,7 @@ function App() {
   };
 
   const viewTitles = { 'dashboard': 'הדשבורד שלי', 'tasks': 'משימות כלליות', 'calendar': 'לוח שנה', 'statistics': 'סטטיסטיקה וניתוח ביצועים', 'goals': 'מטרות ויעדים קדימה', 'dives': 'יומן תצפיות צלילה' };
-const viewSubtitles = { 'dashboard': new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), 'statistics': 'מעקב אחר עקביות, מומנטום והתפלגות משימות'};
+  const viewSubtitles = { 'dashboard': new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), 'statistics': 'מעקב אחר עקביות, מומנטום והתפלגות משימות'};
 
   const activeCustomPage = (state.customPages || []).find(p => p.id === currentView);
 
@@ -130,7 +181,6 @@ const viewSubtitles = { 'dashboard': new Date().toLocaleDateString('he-IL', { we
             </button>
           ))}
           
-          {/* ממשק הוספת הדף הפנימי בסרגל הצד */}
           {isAddingPage ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '15px' }}>
                 <input 
@@ -170,12 +220,13 @@ const viewSubtitles = { 'dashboard': new Date().toLocaleDateString('he-IL', { we
             )}
           </header>
 
+          {/* שים לב לתוספת של onReorder={handleReorder} לקומפוננטות */}
           {currentView === 'dashboard' && <Dashboard state={state} todayStr={todayStr} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onNavigate={setCurrentView} />}
-          {currentView === 'tasks' && <Tasks tasks={state.tasks || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} />}
+          {currentView === 'tasks' && <Tasks tasks={state.tasks || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} />}
           {currentView === 'statistics' && <Statistics state={state} todayStr={todayStr} />}
-          {currentView === 'goals' && <Goals goals={state.goals || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} />}
+          {currentView === 'goals' && <Goals goals={state.goals || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} />}
           {currentView === 'calendar' && <FullCalendar tasks={state.tasks || []} onAdd={handleAdd} />}
-          {activeCustomPage && <CustomPage page={activeCustomPage} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} />}
+          {activeCustomPage && <CustomPage page={activeCustomPage} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} />}
           {currentView === 'dives' && <Dives seenAnimals={state.marineAnimals || []} onSave={handleSaveMarineAnimal} onRemove={handleRemoveMarineAnimal} />}
         </section>
       </main>

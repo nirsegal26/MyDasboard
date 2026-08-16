@@ -13,29 +13,37 @@ export default function Statistics({ state, todayStr }) {
 
     const currentDayOfWeekGlobal = new Date().getDay();
 
-    // סינון ההרגלים הרלוונטיים להיום כדי ש"תפילין" לא יפגע בציון הפרודוקטיביות בשבת
+    // לכידה מלאה של הארכיון - כולל משימות כלליות ומשימות מדפים מותאמים
+    const allHistoricalTasks = [
+        ...(state.tasks || []),
+        ...(state.archive || []).filter(a => !a.archivedFrom || a.archivedFrom === 'tasks' || a.archivedFrom === 'custom')
+    ];
+    
+    const allHistoricalGoals = [
+        ...(state.goals || []),
+        ...(state.archive || []).filter(a => a.archivedFrom === 'goals')
+    ];
+
     const relevantHabitsForToday = (state.habits || []).filter(h => {
         const name = h.title || h.name || '';
         return !(name.includes('תפילין') && currentDayOfWeekGlobal === 6);
     });
 
-    // חישוב משימות רלוונטיות להיום (פתוחות + אלו שהושלמו היום ספציפית)
-    const relevantTasksForToday = (state.tasks || []).filter(t => {
+    const relevantTasksForToday = allHistoricalTasks.filter(t => {
         const isRelevant = !t.startDate || t.startDate <= todayStr;
         const isDoneToday = t.completed && t.completedAt === todayStr;
         return (isRelevant && !t.completed) || isDoneToday;
     });
+    
     const tasksDoneToday = relevantTasksForToday.filter(t => t.completed).length;
     const totalDailyTasks = relevantTasksForToday.length;
 
     const totalHabits = relevantHabitsForToday.length;
     const habitsDoneToday = relevantHabitsForToday.filter(h => h.completedDates && h.completedDates.includes(todayStr)).length;
 
-    // חישוב כולל להצגת X/Y בתובנות
     const todayDoneTotal = tasksDoneToday + habitsDoneToday;
     const todayTargetTotal = totalDailyTasks + totalHabits;
     
-    // אחוזי פרודוקטיביות
     const productivity = todayTargetTotal === 0 ? 0 : Math.round((todayDoneTotal / todayTargetTotal) * 100);
 
     const bestHabit = (state.habits || []).length > 0 ? state.habits.reduce((prev, current) => 
@@ -68,18 +76,16 @@ export default function Statistics({ state, todayStr }) {
 
             if (!isFuture) {
                 const habitsDone = (state.habits || []).filter(h => h.completedDates?.includes(dayStr)).length;
-                const tasksDone = (state.tasks || []).filter(t => t.completedAt === dayStr).length;
-                const goalsDone = (state.goals || []).filter(g => g.completedAt === dayStr).length;
+                const tasksDone = allHistoricalTasks.filter(t => t.completedAt === dayStr).length;
+                const goalsDone = allHistoricalGoals.filter(g => g.completedAt === dayStr).length;
                 intensity = habitsDone + tasksDone + goalsDone;
 
-                // חישוב מטרות היומיות שהיו פתוחות באותו תאריך ספציפי
-                const activeTasksOnDay = (state.tasks || []).filter(t => {
+                const activeTasksOnDay = allHistoricalTasks.filter(t => {
                     const started = !t.startDate || t.startDate <= dayStr;
                     const notDoneBefore = !t.completed || t.completedAt >= dayStr;
                     return started && notDoneBefore;
                 }).length;
                 
-                // חישוב הרגלים לאותו יום (מקזז את תפילין אם מדובר ביום שבת)
                 const activeHabitsOnDay = (state.habits || []).filter(h => {
                     const name = h.title || h.name || '';
                     return !(name.includes('תפילין') && d.getDay() === 6);
@@ -90,16 +96,16 @@ export default function Statistics({ state, todayStr }) {
                 if (totalTargetOnDay > 0) {
                     percentage = intensity / totalTargetOnDay;
                 } else if (intensity > 0) {
-                    percentage = 1; // ביצע פעולות ביום ללא יעדים מוגדרים
+                    percentage = 1;
                 }
             }
 
             let bg = 'var(--bg-color)';
             if (!isFuture) {
-                if (percentage >= 1) bg = 'rgba(216, 235, 233, 0.9)';         // 100% 
-                else if (percentage >= 0.7) bg = 'rgba(110, 221, 210, 0.9)';  // 70% - 99%
-                else if (percentage >= 0.4) bg = 'rgba(72, 189, 177, 0.7)';   // 40% - 69%
-                else if (percentage > 0) bg = 'rgba(79, 209, 197, 0.2)';      // 1% - 39%
+                if (percentage >= 1) bg = 'rgba(216, 235, 233, 0.9)';         
+                else if (percentage >= 0.7) bg = 'rgba(110, 221, 210, 0.9)';  
+                else if (percentage >= 0.4) bg = 'rgba(72, 189, 177, 0.7)';   
+                else if (percentage > 0) bg = 'rgba(79, 209, 197, 0.2)';      
             }
 
             days.push(
@@ -178,9 +184,7 @@ export default function Statistics({ state, todayStr }) {
                             const displayName = habit.title || habit.name || '';
                             const isTefillin = displayName.includes('תפילין');
 
-                            // מעבר אחורה בזמן לחישוב הרצף
                             while (true) {
-                                // התעלמות מימי שבת במידה ומדובר בתפילין
                                 if (isTefillin && d.getDay() === 6) {
                                     d.setDate(d.getDate() - 1);
                                     continue;
@@ -192,10 +196,8 @@ export default function Statistics({ state, todayStr }) {
                                     streak++;
                                     d.setDate(d.getDate() - 1);
                                 } else if (dStr === todayStr) {
-                                    // מאפשר ליום הנוכחי להיות ריק (טרם סומן) מבלי לשבור רצף
                                     d.setDate(d.getDate() - 1);
                                 } else {
-                                    // הרצף נשבר
                                     break; 
                                 }
                             }

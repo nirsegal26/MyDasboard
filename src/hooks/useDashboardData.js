@@ -1,55 +1,52 @@
 import { useState, useEffect } from 'react';
 
-// פונקציית עזר לתאריכים (מונעת באגים של אזורי זמן)
+const STORAGE_KEY = 'dashboard_app_data';
+
 export const getDateString = (dateObj) => {
-    const offset = dateObj.getTimezoneOffset() * 60000;
-    return (new Date(dateObj - offset)).toISOString().split('T')[0];
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 };
 
-const defaultState = {
-    habits: [
-        { id: 1, name: 'נשימות וים הוף', completedDates: [] },
-        { id: 2, name: 'עמידה ביעד חלבון יומי', completedDates: [] },
-        { id: 3, name: 'כתיבה ביומן תודות', completedDates: [] }
-    ],
-    tasks: [
-        { id: 1, title: 'סיום מודול פרויקט פורטפוליו', startDate: '', dueDate: '2026-08-10', completed: false, completedAt: null },
-        { id: 2, title: 'הרשמה לקורסי בחירה', startDate: '2026-09-01', dueDate: '2026-09-15', completed: false, completedAt: null }
-    ],
-    goals: [
-        { id: 1, title: 'שיפור ביצועים במבנה נתונים', completed: false, completedAt: null }
-    ],
-    customPages: [],
+const initialData = {
+    tasks: [],
+    goals: [],
+    habits: [],
     notes: [],
-    activeCustomPageId: null
+    marineAnimals: [],
+    customPages: [],
+    archive: []
 };
 
 export function useDashboardData() {
-    // טעינה ראשונית מ-LocalStorage או שימוש בברירת המחדל
     const [state, setState] = useState(() => {
-        const saved = localStorage.getItem('personal_dashboard_data');
-        if (!saved) return defaultState;
-        
         try {
-            const parsed = JSON.parse(saved);
-            // מיזוג המבנה החדש עם הנתונים השמורים למניעת קריסות (Fallback)
-            return { ...defaultState, ...parsed };
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return {
+                    tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+                    goals: Array.isArray(parsed.goals) ? parsed.goals : [],
+                    habits: Array.isArray(parsed.habits) ? parsed.habits : [],
+                    notes: Array.isArray(parsed.notes) ? parsed.notes : [],
+                    marineAnimals: Array.isArray(parsed.marineAnimals) ? parsed.marineAnimals : [],
+                    customPages: Array.isArray(parsed.customPages) ? parsed.customPages : [],
+                    archive: Array.isArray(parsed.archive) ? parsed.archive : []
+                };
+            }
         } catch (e) {
-            console.error("שגיאה בטעינת נתונים מהזיכרון המקומי", e);
-            return defaultState;
+            console.error('Error loading data from localStorage:', e);
         }
+        return initialData;
     });
 
-    // שמירה אוטומטית ל-LocalStorage בכל פעם ש-state משתנה (מחליף את פונקציית saveState הישנה)
     useEffect(() => {
-        localStorage.setItem('your_storage_key', JSON.stringify({
-            tasks: state.tasks,
-            goals: state.goals,
-            habits: state.habits,
-            marineAnimals: state.marineAnimals,
-            customPages: state.customPages,
-            archive: state.archive // <--- הוסף את השורה הזו חובה!
-        }));
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch (e) {
+            console.error('Error saving data to localStorage:', e);
+        }
     }, [state]);
 
     return [state, setState];

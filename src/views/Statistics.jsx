@@ -13,16 +13,12 @@ export default function Statistics({ state, todayStr }) {
 
     const currentDayOfWeekGlobal = new Date().getDay();
 
-    // לכידה מלאה של הארכיון - כולל משימות כלליות ומשימות מדפים מותאמים
-    const allHistoricalTasks = [
-        ...(state.tasks || []),
-        ...(state.archive || []).filter(a => !a.archivedFrom || a.archivedFrom === 'tasks' || a.archivedFrom === 'custom')
-    ];
-    
-    const allHistoricalGoals = [
-        ...(state.goals || []),
-        ...(state.archive || []).filter(a => a.archivedFrom === 'goals')
-    ];
+    // איחוד משימות פתוחות/קיימות עם משימות שהושלמו ונמחקו (ארכיון)
+    const archivedTasks = (state.archive || []).filter(a => !a.archivedFrom || a.archivedFrom === 'tasks' || a.archivedFrom === 'custom');
+    const archivedGoals = (state.archive || []).filter(a => a.archivedFrom === 'goals');
+
+    const allHistoricalTasks = [...(state.tasks || []), ...archivedTasks];
+    const allHistoricalGoals = [...(state.goals || []), ...archivedGoals];
 
     const relevantHabitsForToday = (state.habits || []).filter(h => {
         const name = h.title || h.name || '';

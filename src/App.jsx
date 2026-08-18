@@ -18,7 +18,6 @@ function App() {
   
   const todayStr = getDateString(new Date());
 
-  // פונקציית גרירה שדואגת לשמור את הסדר החדש במערכת
   const handleReorder = (collection, newArray, customPageId = null) => {
     setState(prev => {
         if (collection === 'custom') {
@@ -40,11 +39,9 @@ function App() {
           ...prevState,
           customPages: (prevState.customPages || []).map(p => {
               if (p.id === customPageId) {
-                  let updatedTasks = p.tasks.map(t => 
+                  const updatedTasks = p.tasks.map(t => 
                       t.id === id ? { ...t, completed: !t.completed, completedAt: !t.completed ? todayStr : null } : t
                   );
-                  // מיון אוטומטי: פתוחות למעלה, סגורות למטה
-                  updatedTasks = [...updatedTasks.filter(t => !t.completed), ...updatedTasks.filter(t => t.completed)];
                   return { ...p, tasks: updatedTasks };
               }
               return p;
@@ -52,7 +49,7 @@ function App() {
         };
       }
       
-      let newArray = prevState[collection].map(item => {
+      const newArray = (prevState[collection] || []).map(item => {
         if (item.id === id) {
           if (collection === 'habits') {
             const dates = item.completedDates || [];
@@ -63,11 +60,6 @@ function App() {
         return item;
       });
 
-      // מיון אוטומטי במשימות ובמטרות
-      if (collection === 'tasks' || collection === 'goals') {
-          newArray = [...newArray.filter(item => !item.completed), ...newArray.filter(item => item.completed)];
-      }
-
       return { ...prevState, [collection]: newArray };
     });
   };
@@ -77,13 +69,12 @@ function App() {
       let itemToDelete = null;
 
       if (collection === 'custom') {
-        const page = prevState.customPages.find(p => p.id === customPageId);
+        const page = (prevState.customPages || []).find(p => p.id === customPageId);
         if (page) itemToDelete = page.tasks.find(t => t.id === id);
       } else {
         itemToDelete = (prevState[collection] || []).find(item => item.id === id);
       }
 
-      // שמירה לארכיון אם המשימה הוגדרה כהושלמה לפני שמחקו אותה
       let newArchive = prevState.archive || [];
       if (itemToDelete && itemToDelete.completed) {
         newArchive = [...newArchive, { ...itemToDelete, archivedFrom: collection }];
@@ -93,14 +84,14 @@ function App() {
         return { 
           ...prevState, 
           archive: newArchive,
-          customPages: prevState.customPages.map(p => p.id === customPageId ? { ...p, tasks: p.tasks.filter(t => t.id !== id) } : p) 
+          customPages: (prevState.customPages || []).map(p => p.id === customPageId ? { ...p, tasks: p.tasks.filter(t => t.id !== id) } : p) 
         };
       }
       
       return { 
         ...prevState, 
         archive: newArchive,
-        [collection]: prevState[collection].filter(item => item.id !== id) 
+        [collection]: (prevState[collection] || []).filter(item => item.id !== id) 
       };
     });
   };
@@ -108,16 +99,16 @@ function App() {
   const handleEdit = (id, collection, newText, customPageId = null) => {
     setState(prevState => {
       if (collection === 'custom') {
-        return { ...prevState, customPages: prevState.customPages.map(p => p.id === customPageId ? { ...p, tasks: p.tasks.map(t => t.id === id ? { ...t, title: newText } : t) } : p) };
+        return { ...prevState, customPages: (prevState.customPages || []).map(p => p.id === customPageId ? { ...p, tasks: p.tasks.map(t => t.id === id ? { ...t, title: newText } : t) } : p) };
       }
-      return { ...prevState, [collection]: prevState[collection].map(item => item.id === id ? { ...item, [item.title !== undefined ? 'title' : 'name']: newText } : item) };
+      return { ...prevState, [collection]: (prevState[collection] || []).map(item => item.id === id ? { ...item, [item.title !== undefined ? 'title' : 'name']: newText } : item) };
     });
   };
 
   const handleAdd = (collection, newItem) => {
     setState(prevState => {
       if (collection === 'custom') {
-        return { ...prevState, customPages: prevState.customPages.map(p => p.id === newItem.pageId ? { ...p, tasks: [...p.tasks, newItem.task] } : p) };
+        return { ...prevState, customPages: (prevState.customPages || []).map(p => p.id === newItem.pageId ? { ...p, tasks: [...p.tasks, newItem.task] } : p) };
       }
       return { ...prevState, [collection]: [...(prevState[collection] || []), newItem] };
     });
@@ -149,8 +140,8 @@ function App() {
   };
 
   const handleDeletePage = (pageId) => {
-    if(confirm('האם אתה בטוח שברצונך למחוק דף זה וכל משימותיו?')) {
-        setState(prev => ({ ...prev, customPages: prev.customPages.filter(p => p.id !== pageId) }));
+    if (confirm('האם אתה בטוח שברצונך למחוק דף זה וכל משימותיו?')) {
+        setState(prev => ({ ...prev, customPages: (prev.customPages || []).filter(p => p.id !== pageId) }));
         setCurrentView('dashboard');
     }
   };
@@ -220,7 +211,6 @@ function App() {
             )}
           </header>
 
-          {/* שים לב לתוספת של onReorder={handleReorder} לקומפוננטות */}
           {currentView === 'dashboard' && <Dashboard state={state} todayStr={todayStr} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onNavigate={setCurrentView} />}
           {currentView === 'tasks' && <Tasks tasks={state.tasks || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} />}
           {currentView === 'statistics' && <Statistics state={state} todayStr={todayStr} />}

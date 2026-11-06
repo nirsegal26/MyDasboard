@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { TaskItem } from '../components/TaskItem';
 
-export default function CustomPage({ page, onToggle, onDelete, onEdit, onAdd, onReorder }) {
+export default function CustomPage({ page, onToggle, onDelete, onEdit, onAdd, onReorder, onClearCompleted }) {
     const [title, setTitle] = useState('');
     const [startDate, setStartDate] = useState('');
     const [dueDate, setDueDate] = useState('');
@@ -68,7 +68,10 @@ export default function CustomPage({ page, onToggle, onDelete, onEdit, onAdd, on
             </div>
 
             <div style={{ overflow: 'visible' }}>
-                {/* משימות פתוחות */}
+                <div style={{ marginBottom: '12px', fontWeight: 'bold', fontSize: '15px' }}>
+                    משימות פתוחות ({openTasks.length})
+                </div>
+
                 <ul className="task-list full-list" style={{ maxHeight: 'none', overflow: 'visible' }}>
                     {openTasks.length === 0 ? (
                         <li style={{ color: 'var(--text-muted)' }}>אין משימות פתוחות בדף זה.</li>
@@ -89,12 +92,21 @@ export default function CustomPage({ page, onToggle, onDelete, onEdit, onAdd, on
                     )}
                 </ul>
 
-                {/* בלוק משימות שבוצעו - ללא גלילה פנימית */}
                 {completedTasks.length > 0 && (
-                    <div style={{ marginTop: '30px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', overflow: 'visible' }}>
-                        <h3 style={{ fontSize: '1.1rem', marginBottom: '15px', color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <i className="fa-solid fa-circle-check"></i> משימות שבוצעו ({completedTasks.length})
-                        </h3>
+                    <div style={{ marginTop: '35px', borderTop: '1px solid var(--border-color)', paddingTop: '20px', overflow: 'visible' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--accent-teal)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <i className="fa-solid fa-circle-check"></i> משימות שבוצעו ({completedTasks.length})
+                            </h3>
+                            <button 
+                                className="icon-btn" 
+                                onClick={() => onClearCompleted('custom', page.id)}
+                                style={{ fontSize: '12px', padding: '4px 10px', borderRadius: '4px', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                title="נקה משימות שבוצעו"
+                            >
+                                <i className="fa-solid fa-broom"></i> נקה הכל
+                            </button>
+                        </div>
                         <ul className="task-list no-drag" style={{ opacity: 0.75, maxHeight: 'none', overflow: 'visible' }}>
                             {completedTasks.map(task => (
                                 <li key={task.id} style={{ listStyle: 'none' }}>

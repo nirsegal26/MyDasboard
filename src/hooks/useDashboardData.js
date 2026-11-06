@@ -16,7 +16,8 @@ const initialData = {
     notes: [],
     marineAnimals: [],
     customPages: [],
-    archive: []
+    archive: [],
+    scheduleEvents: []
 };
 
 export function useDashboardData() {
@@ -32,7 +33,8 @@ export function useDashboardData() {
                     notes: Array.isArray(parsed.notes) ? parsed.notes : [],
                     marineAnimals: Array.isArray(parsed.marineAnimals) ? parsed.marineAnimals : [],
                     customPages: Array.isArray(parsed.customPages) ? parsed.customPages : [],
-                    archive: Array.isArray(parsed.archive) ? parsed.archive : []
+                    archive: Array.isArray(parsed.archive) ? parsed.archive : [],
+                    scheduleEvents: Array.isArray(parsed.scheduleEvents) ? parsed.scheduleEvents : []
                 };
             }
         } catch (e) {

@@ -6,7 +6,6 @@ export default function Dashboard({ state, todayStr, onToggle, onDelete, onEdit,
     const [newNote, setNewNote] = useState('');
     const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
 
-    // ניהול עריכה והוספה של הרגלים ללא הודעות קופצות מהדפדפן
     const [editingHabitId, setEditingHabitId] = useState(null);
     const [editHabitText, setEditHabitText] = useState('');
     const [isAddingHabit, setIsAddingHabit] = useState(false);
@@ -30,18 +29,21 @@ export default function Dashboard({ state, todayStr, onToggle, onDelete, onEdit,
         setNewHabitText('');
     };
 
-    // סינון ומיון משימות: משימות פתוחות להיום, או משימות שהושלמו *היום*. 
-    // משימות שהושלמו יורדות לתחתית הרשימה.
+    // סינון משימות פתוחות להיום
+    const openTasksToday = (state.tasks || []).filter(task => {
+        const isRelevantToday = !task.startDate || task.startDate <= todayStr;
+        return isRelevantToday && !task.completed;
+    });
+
     const dashboardTasks = (state.tasks || []).filter(task => {
         const isRelevantToday = !task.startDate || task.startDate <= todayStr;
         const isCompletedToday = task.completed && task.completedAt === todayStr;
         return (isRelevantToday && !task.completed) || isCompletedToday;
     }).sort((a, b) => {
         if (a.completed === b.completed) return 0;
-        return a.completed ? 1 : -1; // משימה שבוצעה יורדת לתחתית
+        return a.completed ? 1 : -1;
     });
 
-    // סינון הרגלים: הסתרת "תפילין" בימי שבת
     const currentDayOfWeek = new Date().getDay();
     const visibleHabits = (state.habits || []).filter(habit => {
         const habitName = habit.title || habit.name || '';
@@ -56,14 +58,15 @@ export default function Dashboard({ state, todayStr, onToggle, onDelete, onEdit,
             </div>
 
             <div className="dashboard-middle">
-                
-                {/* 1. משימות פתוחות להיום */}
+                {/* 1. משימות פתוחות להיום עם מספר המשימות הפתוחות */}
                 <div className="card">
                     <div className="card-header hover-header" onClick={() => setIsTasksModalOpen(true)} title="לחץ לפתיחת כל המשימות בחלון">
-                        <span><i className="fa-solid fa-rocket" style={{color: 'var(--accent-teal)'}}></i> משימות פתוחות להיום</span>
+                        <span>
+                            <i className="fa-solid fa-rocket" style={{color: 'var(--accent-teal)'}}></i> 
+                            משימות פתוחות להיום ({openTasksToday.length})
+                        </span>
                         <i className="fa-solid fa-expand" style={{color: 'var(--text-muted)'}}></i>
                     </div>
-                    {/* המחלקה no-drag תסתיר את אייקון הגרירה לפי ה-CSS שהוספנו */}
                     <ul className="task-list no-drag">
                         {dashboardTasks.length === 0 ? (
                             <li style={{color: 'var(--text-muted)', padding: '10px'}}>אין משימות פתוחות להיום.</li>
@@ -84,7 +87,6 @@ export default function Dashboard({ state, todayStr, onToggle, onDelete, onEdit,
                         )}
                     </div>
                     <ul className="habits-list">
-                        {/* שורת הוספת הרגל פנימית */}
                         {isAddingHabit && (
                             <li className="task-item" style={{ padding: '8px 10px', border: '1px solid var(--accent-teal)' }}>
                                 <input autoFocus type="text" className="inline-edit-input" placeholder="שם ההרגל..." value={newHabitText} onChange={(e) => setNewHabitText(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && saveNewHabit()} />
@@ -154,10 +156,8 @@ export default function Dashboard({ state, todayStr, onToggle, onDelete, onEdit,
                         <input type="text" value={newNote} onChange={(e) => setNewNote(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddNote()} placeholder="הוסף פתק חדש..." style={{ flex: 1 }} />
                     </div>
                 </div>
-
             </div>
 
-            {/* חלון משימות צף (Modal) */}
             {isTasksModalOpen && (
                 <div className="modal-overlay" onClick={() => setIsTasksModalOpen(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>

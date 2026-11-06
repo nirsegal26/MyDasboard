@@ -8,6 +8,7 @@ import FullCalendar from './views/FullCalendar';
 import CustomPage from './views/CustomPage';
 import { CalendarTooltipManager } from './components/CalendarTooltipManager';
 import Dives from './views/Dives';
+import Schedule from './views/Schedule';
 
 function App() {
   const [state, setState] = useDashboardData();
@@ -96,6 +97,39 @@ function App() {
     });
   };
 
+  // פונקציית ניקוי כל המשימות שבוצעו (שמירה לארכיון הסטטיסטיקות ומחיקתן מהרשימה)
+  const handleClearCompleted = (collection, customPageId = null) => {
+    setState(prev => {
+        let completedToArchive = [];
+        let newArchive = prev.archive || [];
+
+        if (collection === 'custom') {
+            const page = (prev.customPages || []).find(p => p.id === customPageId);
+            if (page) {
+                completedToArchive = page.tasks.filter(t => t.completed).map(t => ({ ...t, archivedFrom: 'custom' }));
+            }
+            newArchive = [...newArchive, ...completedToArchive];
+
+            return {
+                ...prev,
+                archive: newArchive,
+                customPages: (prev.customPages || []).map(p => 
+                    p.id === customPageId ? { ...p, tasks: p.tasks.filter(t => !t.completed) } : p
+                )
+            };
+        }
+
+        completedToArchive = (prev[collection] || []).filter(i => i.completed).map(i => ({ ...i, archivedFrom: collection }));
+        newArchive = [...newArchive, ...completedToArchive];
+
+        return {
+            ...prev,
+            archive: newArchive,
+            [collection]: (prev[collection] || []).filter(i => !i.completed)
+        };
+    });
+  };
+
   const handleEdit = (id, collection, newText, customPageId = null) => {
     setState(prevState => {
       if (collection === 'custom') {
@@ -112,6 +146,21 @@ function App() {
       }
       return { ...prevState, [collection]: [...(prevState[collection] || []), newItem] };
     });
+  };
+
+  const handleSaveScheduleEvent = (eventData) => {
+    setState(prev => {
+        const events = prev.scheduleEvents || [];
+        const filtered = events.filter(e => e.id !== eventData.id && !(e.day === eventData.day && e.hour === eventData.hour));
+        return { ...prev, scheduleEvents: [...filtered, eventData] };
+    });
+  };
+
+  const handleDeleteScheduleEvent = (eventId) => {
+    setState(prev => ({
+        ...prev,
+        scheduleEvents: (prev.scheduleEvents || []).filter(e => e.id !== eventId)
+    }));
   };
 
   const handleSaveMarineAnimal = (animalData) => {
@@ -146,8 +195,18 @@ function App() {
     }
   };
 
-  const viewTitles = { 'dashboard': 'הדשבורד שלי', 'tasks': 'משימות כלליות', 'calendar': 'לוח שנה', 'statistics': 'סטטיסטיקה וניתוח ביצועים', 'goals': 'מטרות ויעדים קדימה', 'dives': 'יומן תצפיות צלילה' };
-  const viewSubtitles = { 'dashboard': new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), 'statistics': 'מעקב אחר עקביות, מומנטום והתפלגות משימות'};
+  const viewTitles = { 
+    'dashboard': 'הדשבורד שלי', 
+    'tasks': 'משימות כלליות', 
+    'schedule': 'מערכת שעות',
+    'calendar': 'לוח שנה', 
+    'statistics': 'סטטיסטיקה וניתוח ביצועים', 
+    'goals': 'מטרות ויעדים קדימה', 
+    'dives': 'יומן תצפיות צלילה' 
+  };
+  const viewSubtitles = { 
+    'dashboard': new Date().toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }), 
+  };
 
   const activeCustomPage = (state.customPages || []).find(p => p.id === currentView);
 
@@ -157,6 +216,7 @@ function App() {
         <div className="sidebar-logo"><i className="fa-solid fa-layer-group"></i></div>
         <div className="nav-links">
           <button className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentView('dashboard')}><i className="fa-solid fa-house"></i> דשבורד ראשי</button>
+          <button className={`nav-item ${currentView === 'schedule' ? 'active' : ''}`} onClick={() => setCurrentView('schedule')}><i className="fa-solid fa-graduation-cap"></i> מערכת שעות</button>
           <button className={`nav-item ${currentView === 'calendar' ? 'active' : ''}`} onClick={() => setCurrentView('calendar')}><i className="fa-regular fa-calendar"></i> לוח שנה</button>
           <button className={`nav-item ${currentView === 'tasks' ? 'active' : ''}`} onClick={() => setCurrentView('tasks')}><i className="fa-solid fa-list-check"></i> משימות כלליות</button>
           <button className={`nav-item ${currentView === 'goals' ? 'active' : ''}`} onClick={() => setCurrentView('goals')}><i className="fa-solid fa-bullseye"></i> מטרות ויעדים</button>
@@ -212,11 +272,12 @@ function App() {
           </header>
 
           {currentView === 'dashboard' && <Dashboard state={state} todayStr={todayStr} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onNavigate={setCurrentView} />}
-          {currentView === 'tasks' && <Tasks tasks={state.tasks || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} />}
+          {currentView === 'schedule' && <Schedule scheduleEvents={state.scheduleEvents || []} onSaveEvent={handleSaveScheduleEvent} onDeleteEvent={handleDeleteScheduleEvent} />}
+          {currentView === 'tasks' && <Tasks tasks={state.tasks || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} onClearCompleted={handleClearCompleted} />}
           {currentView === 'statistics' && <Statistics state={state} todayStr={todayStr} />}
-          {currentView === 'goals' && <Goals goals={state.goals || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} />}
+          {currentView === 'goals' && <Goals goals={state.goals || []} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} onClearCompleted={handleClearCompleted} />}
           {currentView === 'calendar' && <FullCalendar tasks={state.tasks || []} onAdd={handleAdd} />}
-          {activeCustomPage && <CustomPage page={activeCustomPage} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} />}
+          {activeCustomPage && <CustomPage page={activeCustomPage} onToggle={handleToggle} onDelete={handleDelete} onEdit={handleEdit} onAdd={handleAdd} onReorder={handleReorder} onClearCompleted={handleClearCompleted} />}
           {currentView === 'dives' && <Dives seenAnimals={state.marineAnimals || []} onSave={handleSaveMarineAnimal} onRemove={handleRemoveMarineAnimal} />}
         </section>
       </main>

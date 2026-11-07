@@ -216,9 +216,9 @@ function App() {
         <div className="sidebar-logo"><i className="fa-solid fa-layer-group"></i></div>
         <div className="nav-links">
           <button className={`nav-item ${currentView === 'dashboard' ? 'active' : ''}`} onClick={() => setCurrentView('dashboard')}><i className="fa-solid fa-house"></i> דשבורד ראשי</button>
-          <button className={`nav-item ${currentView === 'schedule' ? 'active' : ''}`} onClick={() => setCurrentView('schedule')}><i className="fa-solid fa-graduation-cap"></i> מערכת שעות</button>
           <button className={`nav-item ${currentView === 'calendar' ? 'active' : ''}`} onClick={() => setCurrentView('calendar')}><i className="fa-regular fa-calendar"></i> לוח שנה</button>
           <button className={`nav-item ${currentView === 'tasks' ? 'active' : ''}`} onClick={() => setCurrentView('tasks')}><i className="fa-solid fa-list-check"></i> משימות כלליות</button>
+          <button className={`nav-item ${currentView === 'schedule' ? 'active' : ''}`} onClick={() => setCurrentView('schedule')}><i className="fa-solid fa-graduation-cap"></i> מערכת שעות</button>
           <button className={`nav-item ${currentView === 'goals' ? 'active' : ''}`} onClick={() => setCurrentView('goals')}><i className="fa-solid fa-bullseye"></i> מטרות ויעדים</button>
           <button className={`nav-item ${currentView === 'dives' ? 'active' : ''}`} onClick={() => setCurrentView('dives')}><i className="fa-solid fa-water"></i> יומן צלילות</button>
           <button className={`nav-item ${currentView === 'statistics' ? 'active' : ''}`} onClick={() => setCurrentView('statistics')}><i className="fa-solid fa-chart-pie"></i> סטטיסטיקה</button>
